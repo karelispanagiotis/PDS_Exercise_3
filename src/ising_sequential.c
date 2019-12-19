@@ -55,6 +55,14 @@ void ising(int *G, double *w, int k, int n)
     }
 
     if(k%2 != 0)
-        memcpy(G2, G, n*n*sizeof(int));
-
+    {
+        /* Memory Address pointed by G does NOT change for caller.
+         * So for odd number of iterations (k) we should swap
+         * pointers and copy memory.
+         */
+        swapPtr(&G, &G2);
+        memcpy(G, G2, (size_t)n*n*sizeof(int));
+    }
+    
+    free(G2);
 }
