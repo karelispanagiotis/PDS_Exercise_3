@@ -43,6 +43,8 @@ int calculateSpin(int *G, double *w, int n, int pos)
     
 }
 
+////////////////////////////////////////////////////
+
 void ising(int *G, double *w, int k, int n)
 {
     int *G2 = malloc((size_t)n*n*sizeof(int)); 
