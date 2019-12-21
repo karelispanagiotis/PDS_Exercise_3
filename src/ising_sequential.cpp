@@ -25,9 +25,9 @@ void swapPtr(int** ptr1, int** ptr2)
 
 ////////////////////////////////////////////////////
 
-int calculateSpin(int *G, double *w, int n, int pos)
+int calculateSpin(int *G, float *w, int n, int pos)
 {
-    double result = 0.0;
+    float result = 0.0;
     for(int i=-2; i<=2; i++)
         for(int j=-2; j<=2; j++)
         {
@@ -45,9 +45,9 @@ int calculateSpin(int *G, double *w, int n, int pos)
 
 ////////////////////////////////////////////////////
 
-void ising(int *G, double *w, int k, int n)
+void ising(int *G, float *w, int k, int n)
 {
-    int *G2 = malloc((size_t)n*n*sizeof(int)); 
+    int *G2 = (int *)malloc((size_t)n*n*sizeof(int)); 
 
     for(int iter=0; iter<k; iter++)
     {
