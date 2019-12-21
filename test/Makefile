@@ -18,3 +18,6 @@ tester_cudaV1: tester.cpp
 	$(CUDAC) $(CFLAFS) $(INCLUDES) -x cu -dc $<
 	$(CUDAC) $(CFLAFS) ../lib/ising_cudaV1.o tester.o -o $@
 	rm *.o
+
+clean:
+	rm tester_*
