@@ -5,13 +5,18 @@
 
 #define epsilon 1e-6
 
+inline int mod(int x, int y)
+{
+    return (y + x%y)%y;
+}
+
 int calculatePos(int pos, int n, int xOffset, int yOffset)
 {
-    // Find coordinates
+    // Find coordinates in the lattice
     int i = pos/n;
     int j = pos%n;
     // Perform modular arithmetic for the result
-    return ((n + (i + yOffset))%n)*n + (n + (j + xOffset))%n;  
+    return mod(i + yOffset, n)*n + mod(j + xOffset, n);  
 }
 
 ////////////////////////////////////////////////////
