@@ -10,13 +10,19 @@ inline int mod(int x, int y)
     return (y + x%y)%y;
 }
 
-int calculatePos(int pos, int n, int xOffset, int yOffset)
+inline int calcLatticePos(int pos, int n, int xOffset, int yOffset)
 {
-    // Find coordinates in the lattice
-    int i = pos/n;
-    int j = pos%n;
-    // Perform modular arithmetic for the result
-    return mod(i + yOffset, n)*n + mod(j + xOffset, n);  
+    /* Finds the index in the lattice, according to
+     *  pos: Current Position (in which we calculate spin)
+     *  xOffset: Offset in the x-axis
+     *  yOffset: Offset in the y-axis
+     * -----------------------------------------------------
+     *  pos/n : is the row that corresponds to pos
+     *  pos%n : is the column that corresponds to pos
+     */
+
+    // Perform Modular Arithmetic
+    return mod(pos/n + yOffset, n)*n + mod(pos%n + xOffset, n);  
 }
 
 ////////////////////////////////////////////////////
@@ -36,7 +42,7 @@ int calculateSpin(int *G, float *w, int n, int pos)
     for(int i=-2; i<=2; i++)
         for(int j=-2; j<=2; j++)
         {
-            result += w[ (i+2)*5 + (j+2) ]*G[ calculatePos(pos, n, j, i) ];
+            result += w[ (i+2)*5 + (j+2) ]*G[ calcLatticePos(pos, n, j, i) ];
         }
 
     if( fabs(result) < epsilon)
