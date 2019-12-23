@@ -1,5 +1,6 @@
 #include "ising.h"
 #include <stdio.h>
+#include <math.h>
 #include <cuda_runtime.h>
 #include <cuda.h>
 #include <cuda_runtime_api.h>
@@ -8,16 +9,29 @@
 
 #define BLK_SZ 512
 
-__device__ int calculatePos(int pos, int n, int xOffset, int yOffset)
+__device__ __forceinline__ 
+int mod(int x, int y)
 {
-    // Find coordinates
-    int i = pos/n;
-    int j = pos%n;
-    // Perform modular arithmetic for the result
-    return ((n + (i + yOffset))%n)*n + (n + (j + xOffset))%n;  
+    return (y + x%y)%y;
 }
 
-__global__ void swapPtr(int** ptr1, int** ptr2)
+__device__  __forceinline__ 
+int calcLatticePos(int pos, int n, int xOffset, int yOffset)
+{
+    /* Finds the index in the lattice, according to
+     *  pos: Current Position (in which we calculate spin)
+     *  xOffset: Offset in the x-axis
+     *  yOffset: Offset in the y-axis
+     * -----------------------------------------------------
+     *  pos/n : is the row that corresponds to pos
+     *  pos%n : is the column that corresponds to pos
+     */
+
+    // Perform Modular Arithmetic
+    return mod(pos/n + yOffset, n)*n + mod(pos%n + xOffset, n);  
+}
+
+void swapPtr(int** ptr1, int** ptr2)
 {
     int *tempPtr = *ptr1;
     *ptr1 = *ptr2;
@@ -28,21 +42,23 @@ __global__ void calculateSpin(int *current, int *next, float *w, int n)
 {
     int index = blockIdx.x * BLK_SZ + threadIdx.x;
     
-    if (index < n)
+    if(index < n*n)
     {
-    float result = 0.0;
-    for(int i=-2; i<=2; i++)
-        for(int j=-2; j<=2; j++)
-        {
-            result += w[ (i+2)*5 + (j+2) ]*current[ calculatePos(blockIdx.x, n, j, i) ];
-        }
-    if( result < epsilon && result > -epsilon)
-        next[index] = current[index];
-    else if (result < 0)
-        next[index] = -1;
-    else
-        next[index] = 1;
+        float result = 0.0f;
+        int i,j;
+        for(i=-2; i<=2; i++)
+            for(j=-2; j<=2; j++)
+                result += w[ (i+2)*5 + (j+2) ] * current[ calcLatticePos(index, n, j, i) ];
+        
+        if(fabsf(result) < epsilon )
+            next[index] = current[index];
+        else if(result < 0)
+            next[index] = -1;
+        else
+            next[index] = 1;
     }
+    
+    
 }
 
 void ising(int *G, float *w, int k, int n)
@@ -50,35 +66,26 @@ void ising(int *G, float *w, int k, int n)
     int *dev_G, *dev_G2;
     float *dev_w;
 
-    cudaError err;
-    
-    // Memory Allocation and Memory Copy on Device
-    err = cudaMalloc((void**)&dev_G, (size_t)n*n*sizeof(int));
-    printf("Allocate 1: %s\n",cudaGetErrorString(err));
-    err = cudaMalloc((void**)&dev_G2, (size_t)n*n*sizeof(int));
-    printf("Allocate 2: %s\n",cudaGetErrorString(err));
-    err = cudaMalloc((void**)&dev_w, 25*sizeof(float));
-    printf("Allocate: %s\n",cudaGetErrorString(err));
-    err = cudaMemcpy(dev_G, G, (size_t)n*n*sizeof(int), cudaMemcpyHostToDevice);
-    printf("Send 1: %s\n",cudaGetErrorString(err));
-    err = cudaMemcpy(dev_w, w, 25*sizeof(float), cudaMemcpyHostToDevice);
-    printf("Send 2: %s\n",cudaGetErrorString(err));
+    // Data Transfer and Memory Alloc on Device
+    cudaMalloc(&dev_G, n*n*sizeof(int));
+    cudaMalloc(&dev_G2, n*n*sizeof(int));
+    cudaMalloc(&dev_w, 25*sizeof(float));
 
-    // Make the Calculations
+    cudaMemcpy(dev_G, G, n*n*sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(dev_w, w, 25*sizeof(float), cudaMemcpyHostToDevice);
 
-    printf("Blocks: %d, Threads: %d\n", (n*n)/BLK_SZ + 1, BLK_SZ);
-    calculateSpin<<<(n*n)/BLK_SZ + 1, BLK_SZ>>>(dev_G, dev_G2, dev_w, n);
-    err = cudaGetLastError();
-    printf("Launch: %s\n",cudaGetErrorString(err));
+    // Kernel Launch - Calculations
+    for(int iter=0; iter<k; iter++)
+    {
+        calculateSpin<<<(n*n + BLK_SZ - 1)/BLK_SZ, BLK_SZ>>>(dev_G, dev_G2, dev_w, n);
+        cudaDeviceSynchronize();
+        swapPtr(&dev_G, &dev_G2);
+    }
 
-    err = cudaThreadSynchronize();
-    printf("Sync: %s\n",cudaGetErrorString(err));
-    //swapPtr<<<1,1>>>(&dev_G, &dev_G2);
-    //cudaDeviceSynchronize();
-    // Copy Results back to Host
-    err = cudaMemcpy(G, dev_G2, (size_t)n*n*sizeof(int), cudaMemcpyDeviceToHost);
-    printf("Send 3: %s\n",cudaGetErrorString(err));
-    // Memory Cleanup
+    // Send Result back to CPU
+    cudaMemcpy(G, dev_G, n*n*sizeof(int), cudaMemcpyDeviceToHost);
+
+    // Clear Resources
     cudaFree(dev_G);
     cudaFree(dev_G2);
 }
