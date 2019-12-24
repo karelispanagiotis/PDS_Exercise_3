@@ -1,9 +1,10 @@
 #include "ising.h"
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define epsilon 1e-6
+#define epsilon 1e-6f
 
 inline int mod(int x, int y)
 {
@@ -41,9 +42,7 @@ int calculateSpin(int *G, float *w, int n, int pos)
     float result = 0.0;
     for(int i=-2; i<=2; i++)
         for(int j=-2; j<=2; j++)
-        {
             result += w[ (i+2)*5 + (j+2) ]*G[ calcLatticePos(pos, n, j, i) ];
-        }
 
     if( fabs(result) < epsilon)
         return G[pos];  //doesn't change spin

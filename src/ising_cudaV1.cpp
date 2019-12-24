@@ -5,7 +5,7 @@
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 
-#define epsilon 1e-6
+#define epsilon 1e-6f
 
 #define BLK_SZ 512
 
@@ -40,9 +40,9 @@ void swapPtr(int** ptr1, int** ptr2)
 
 __global__ void calculateSpin(int *current, int *next, float *w, int n)
 {
-    int index = blockIdx.x * BLK_SZ + threadIdx.x;
+    size_t index = (size_t)blockIdx.x * BLK_SZ + threadIdx.x;
     
-    if(index < n*n)
+    if(index < (size_t)n*n)
     {
         float result = 0.0f;
         int i,j;
@@ -65,25 +65,26 @@ void ising(int *G, float *w, int k, int n)
 {
     int *dev_G, *dev_G2;
     float *dev_w;
+    size_t latticeSize = (size_t)n*n*sizeof(int);
 
     // Data Transfer and Memory Alloc on Device
-    cudaMalloc(&dev_G, n*n*sizeof(int));
-    cudaMalloc(&dev_G2, n*n*sizeof(int));
+    cudaMalloc(&dev_G, latticeSize);
+    cudaMalloc(&dev_G2, latticeSize);
     cudaMalloc(&dev_w, 25*sizeof(float));
 
-    cudaMemcpy(dev_G, G, n*n*sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(dev_G, G, latticeSize, cudaMemcpyHostToDevice);
     cudaMemcpy(dev_w, w, 25*sizeof(float), cudaMemcpyHostToDevice);
 
     // Kernel Launch - Calculations
     for(int iter=0; iter<k; iter++)
     {
-        calculateSpin<<<(n*n + BLK_SZ - 1)/BLK_SZ, BLK_SZ>>>(dev_G, dev_G2, dev_w, n);
+        calculateSpin<<<((size_t)n*n + BLK_SZ - 1)/BLK_SZ, BLK_SZ>>>(dev_G, dev_G2, dev_w, n);
         cudaDeviceSynchronize();
         swapPtr(&dev_G, &dev_G2);
     }
 
     // Send Result back to CPU
-    cudaMemcpy(G, dev_G, n*n*sizeof(int), cudaMemcpyDeviceToHost);
+    cudaMemcpy(G, dev_G, latticeSize, cudaMemcpyDeviceToHost);
 
     // Clear Resources
     cudaFree(dev_G);
