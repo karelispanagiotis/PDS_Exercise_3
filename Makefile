@@ -9,7 +9,7 @@ INCLUDES = -I./inc/
 CFLAFS = -O3
 
 #define object files to be made
-OBJECTS = ising_sequential.o ising_cudaV1.o
+OBJECTS = ising_sequential.o ising_cudaV1.o ising_cudaV2.o
 
 lib: $(OBJECTS)
 
