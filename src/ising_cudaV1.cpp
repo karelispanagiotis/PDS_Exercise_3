@@ -7,6 +7,10 @@
 
 #define epsilon 1e-6f
 
+#define WGHT_SZ 25
+#define WGHT_DIM_SZ 5
+#define MAX_OFFSET 2
+
 __device__ __forceinline__ 
 int mod(int x, int y)
 {
@@ -39,9 +43,9 @@ __global__ void calculateSpin(int *current, int *next, float *w, int n)
 
     float result = 0.0f;
     int i,j;
-    for(i=-2; i<=2; i++)
-        for(j=-2; j<=2; j++)
-            result += w[ (i+2)*5 + (j+2) ] * current[ calcLatticePos(blockIdx.y, blockIdx.x, n, j, i) ];
+    for(i=-MAX_OFFSET; i<=MAX_OFFSET; i++)
+        for(j=-MAX_OFFSET; j<=MAX_OFFSET; j++)
+            result += w[ (i+MAX_OFFSET)*WGHT_DIM_SZ + (j+MAX_OFFSET) ] * current[ calcLatticePos(blockIdx.y, blockIdx.x, n, j, i) ];
     
     if(fabsf(result) < epsilon )
         next[index] = current[index];
@@ -60,10 +64,10 @@ void ising(int *G, float *w, int k, int n)
     // Data Transfer and Memory Alloc on Device
     cudaMalloc(&dev_G, latticeSize);
     cudaMalloc(&dev_G2, latticeSize);
-    cudaMalloc(&dev_w, 25*sizeof(float));
+    cudaMalloc(&dev_w, WGHT_SZ*sizeof(float));
 
     cudaMemcpy(dev_G, G, latticeSize, cudaMemcpyHostToDevice);
-    cudaMemcpy(dev_w, w, 25*sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(dev_w, w, WGHT_SZ*sizeof(float), cudaMemcpyHostToDevice);
 
     // Kernel Launch - Calculations
     dim3 grid2D(n, n);
