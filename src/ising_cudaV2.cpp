@@ -41,22 +41,24 @@ void swapPtr(int** ptr1, int** ptr2)
 
 __global__ void calculateSpin(int *current, int *next, float *w, int n)
 {
-    size_t index = blockIdx.y*BLK_DIM_SZ*n + threadIdx.y*n + blockIdx.x*BLK_DIM_SZ + threadIdx.x ;
+    int gindex_i = blockIdx.y*BLK_DIM_SZ + threadIdx.y;
+    int gindex_j = blockIdx.x*BLK_DIM_SZ + threadIdx.x;
 
-    if(index < (size_t)n*n)
+    if(gindex_i<n && gindex_j<n)
     {
         float result = 0.0f;
         int i,j;
         for(i=-MAX_OFFSET; i<=MAX_OFFSET; i++)
             for(j=-MAX_OFFSET; j<=MAX_OFFSET; j++)
-                result += w[ (i+MAX_OFFSET)*WGHT_DIM_SZ + (j+MAX_OFFSET) ] * current[ calcLatticePos(index/n, index%n, n, j, i) ];
+                result += w[ (i+MAX_OFFSET)*WGHT_DIM_SZ + (j+MAX_OFFSET) ] * current[ calcLatticePos(gindex_i, gindex_j, n, j, i) ];
         
+        int gindex = gindex_i*n + gindex_j;
         if(fabsf(result) < epsilon )
-            next[index] = current[index];
+            next[gindex] = current[gindex];
         else if(result < 0)
-            next[index] = -1;
+            next[gindex] = -1;
         else
-            next[index] = 1;
+            next[gindex] = 1;
 
     }
 }
