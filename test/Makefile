@@ -13,6 +13,12 @@ tester_sequential: tester.cpp
 	$(CUDAC) $(CFLAFS) ../lib/ising_sequential.o tester.o -o $@
 	rm *.o
 
+otester_cudaV3: tester.cpp
+	cd ..; make lib;
+	$(CUDAC) $(CFLAFS) $(INCLUDES) -c $<
+	$(CUDAC) $(CFLAFS) ../lib/ising_cudaV3.o tester.o -o $@
+	rm *.o
+
 tester_cudaV1: testerCuda.cpp
 	cd ..; make lib;
 	$(CUDAC) $(CFLAFS) $(INCLUDES) -x cu -dc $<
@@ -23,6 +29,12 @@ tester_cudaV2: testerCuda.cpp
 	cd ..; make lib;
 	$(CUDAC) $(CFLAFS) $(INCLUDES) -x cu -dc $<
 	$(CUDAC) $(CFLAFS) ../lib/ising_cudaV2.o testerCuda.o -o $@
+	rm *.o
+
+tester_cudaV3: testerCuda.cpp
+	cd ..; make lib;
+	$(CUDAC) $(CFLAFS) $(INCLUDES) -x cu -dc $<
+	$(CUDAC) $(CFLAFS) ../lib/ising_cudaV3.o testerCuda.o -o $@
 	rm *.o
 	
 sampleGen: sampleGen.cpp
