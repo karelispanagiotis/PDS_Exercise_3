@@ -11,19 +11,10 @@ inline int mod(int x, int y)
     return (y + x%y)%y;
 }
 
-inline int calcLatticePos(int pos, int n, int xOffset, int yOffset)
+inline int calcLatticePos(int i, int j, int n)
 {
-    /* Finds the index in the lattice, according to
-     *  pos: Current Position (in which we calculate spin)
-     *  xOffset: Offset in the x-axis
-     *  yOffset: Offset in the y-axis
-     * -----------------------------------------------------
-     *  pos/n : is the row that corresponds to pos
-     *  pos%n : is the column that corresponds to pos
-     */
-
     // Perform Modular Arithmetic
-    return mod(pos/n + yOffset, n)*n + mod(pos%n + xOffset, n);  
+    return mod(i, n)*n + mod(j, n);  
 }
 
 ////////////////////////////////////////////////////
@@ -37,15 +28,15 @@ void swapPtr(int** ptr1, int** ptr2)
 
 ////////////////////////////////////////////////////
 
-int calculateSpin(int *G, float *w, int n, int pos)
+int calculateSpin(int *G, float *w, int n, int pos_i, int pos_j)
 {
     float result = 0.0;
     for(int i=-2; i<=2; i++)
         for(int j=-2; j<=2; j++)
-            result += w[ (i+2)*5 + (j+2) ]*G[ calcLatticePos(pos, n, j, i) ];
+            result += w[ (i+2)*5 + (j+2) ]*G[ calcLatticePos(pos_i + i, pos_j + j, n) ];
 
     if( fabs(result) < epsilon)
-        return G[pos];  //doesn't change spin
+        return G[pos_i*n + pos_j];  //doesn't change spin
     else if (result < 0)
         return -1;
     else
@@ -61,8 +52,9 @@ void ising(int *G, float *w, int k, int n)
 
     for(int iter=0; iter<k; iter++)
     {
-        for(int i=0; i<n*n; i++)
-            G2[i] = calculateSpin(G, w, n, i);
+        for(int i=0; i<n; i++)
+            for(int j=0; j<n; j++)
+                G2[i*n + j] = calculateSpin(G, w, n, i, j);
         swapPtr(&G, &G2);   //G is always pointing to final struct
     }
 

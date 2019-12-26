@@ -20,16 +20,10 @@ int mod(int x, int y)
 }
 
 __device__  __forceinline__ 
-int calcLatticePos(int i, int j, int n, int xOffset, int yOffset)
+int calcLatticePos(int i, int j, int n)
 {
-    /* Finds the index in the lattice, according to
-     *  i, j   : Current Position (in which we calculate spin)
-     *  xOffset: Offset in the x-axis
-     *  yOffset: Offset in the y-axis
-     */
-
     // Perform Modular Arithmetic
-    return mod(i + yOffset, n)*n + mod(j + xOffset, n);  
+    return mod(i, n)*n + mod(j, n);   
 }
 
 void swapPtr(int** ptr1, int** ptr2)
@@ -50,7 +44,7 @@ __global__ void calculateSpin(int *current, int *next, float *w, int n)
         int i,j;
         for(i=-MAX_OFFSET; i<=MAX_OFFSET; i++)
             for(j=-MAX_OFFSET; j<=MAX_OFFSET; j++)
-                result += w[ (i+MAX_OFFSET)*WGHT_DIM_SZ + (j+MAX_OFFSET) ] * current[ calcLatticePos(gindex_i, gindex_j, n, j, i) ];
+                result += w[ (i+MAX_OFFSET)*WGHT_DIM_SZ + (j+MAX_OFFSET) ] * current[ calcLatticePos(gindex_i + i, gindex_j + j, n) ];
         
         int gindex = gindex_i*n + gindex_j;
         if(fabsf(result) < epsilon )
