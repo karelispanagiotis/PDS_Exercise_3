@@ -24,7 +24,7 @@ tester_cudaV2: testerCuda.cpp
 	$(CUDAC) $(CFLAFS) $(INCLUDES) -x cu -dc $<
 	$(CUDAC) $(CFLAFS) ../lib/ising_cudaV2.o testerCuda.o -o $@
 	rm *.o
-`
+	
 sampleGen: sampleGen.cpp
 	g++ $(INCLUDES) $< ../src/ising_sequential.cpp -o $@
 
