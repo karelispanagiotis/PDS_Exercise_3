@@ -6,6 +6,10 @@
 
 #define epsilon 1e-6f
 
+#define WGHT_SZ 25
+#define WGHT_DIM_SZ 5
+#define MAX_OFFSET 2
+
 inline int mod(int x, int y)
 {
     return (y + x%y)%y;
@@ -31,9 +35,9 @@ void swapPtr(int** ptr1, int** ptr2)
 int calculateSpin(int *G, float *w, int n, int pos_i, int pos_j)
 {
     float result = 0.0;
-    for(int i=-2; i<=2; i++)
-        for(int j=-2; j<=2; j++)
-            result += w[ (i+2)*5 + (j+2) ]*G[ calcLatticePos(pos_i + i, pos_j + j, n) ];
+    for(int i=-MAX_OFFSET; i<=MAX_OFFSET; i++)
+        for(int j=-MAX_OFFSET; j<=MAX_OFFSET; j++)
+            result += w[ (i+MAX_OFFSET)*WGHT_DIM_SZ + (j+MAX_OFFSET) ]*G[ calcLatticePos(pos_i + i, pos_j + j, n) ];
 
     if( fabs(result) < epsilon)
         return G[pos_i*n + pos_j];  //doesn't change spin
