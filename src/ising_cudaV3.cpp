@@ -79,9 +79,11 @@ __global__ void calculateSpin(int *current, int *next, float *w, int n)
     }
 
     // Fetch Weights Data
-    if( threadIdx.x<WGHT_DIM_SZ && threadIdx.y<WGHT_DIM_SZ )
-        weights[threadIdx.y][threadIdx.x] = w[threadIdx.y*WGHT_DIM_SZ + threadIdx.x];
-
+    if( threadIdx.y == MAX_OFFSET + 1 )
+    {
+        int windex = (threadIdx.x < WGHT_SZ) * threadIdx.x; //if tid < 25, then windex = tid. Else 0
+        *(weights[0] + windex)= w[threadIdx.x];
+    }
     __syncthreads();
 
     if(gindex_i<n && gindex_j<n)
