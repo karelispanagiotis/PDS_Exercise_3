@@ -82,7 +82,7 @@ __global__ void calculateSpin(int *current, int *next, float *w, int n)
     if( threadIdx.y == MAX_OFFSET + 1 )
     {
         int windex = (threadIdx.x < WGHT_SZ) * threadIdx.x; //if tid < 25, then windex = tid. Else 0
-        *(weights[0] + windex)= w[threadIdx.x];
+        *(weights[0] + windex)= w[windex];
     }
     __syncthreads();
 
